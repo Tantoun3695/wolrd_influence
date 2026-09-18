@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>War & Clickbait Strategy</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- D3 + topo/geo helpers -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>War & Clickbait Strategy</h1>
+    <p>Lead a real-world power. Use taxes, infrastructure, and viral clicks to gain global influence.</p>
+  </header>
+
+  <main>
+    <div id="map-area">
+      <svg id="worldmap" width="900" height="560"></svg>
+      <div id="hud">
+        <div id="scoreboard">
+          <h3>Influence Leaderboard</h3>
+          <ul id="leaders"></ul>
+        </div>
+        <div id="controls">
+          <button id="endTurn">End Turn</button>
+          <div class="hint">Tip: Click a colored country to manage it.</div>
+        </div>
+      </div>
+    </div>
+
+    <aside id="panel">
+      <div id="empty">
+        <h2>Select a leading country</h2>
+        <p>Highlighted countries are playable big powers.</p>
+      </div>
+
+      <div id="countryPanel" class="hidden">
+        <button id="back">← Back</button>
+        <h2 id="countryName"></h2>
+        <div class="stat-row"><label>Happiness:</label><span id="happiness"></span></div>
+        <div class="stat-row"><label>Economy:</label><span id="economy"></span></div>
+        <div class="stat-row"><label>Infrastructure:</label><span id="infra"></span></div>
+        <div class="stat-row"><label>Influence:</label><span id="influence"></span></div>
+
+        <hr/>
+        <label>Taxes: <span id="taxVal">10%</span></label>
+        <input id="taxSlider" type="range" min="0" max="50" step="1" value="10">
+
+        <div class="actions">
+          <button id="buildInfra">Build Infrastructure (Cost)</button>
+          <button id="investInfluence">Invest in Influence</button>
+        </div>
+
+        <hr/>
+        <h3>Clickbait Options</h3>
+        <button id="viralAd">Start Viral Campaign (low cost)</button>
+        <button id="taxScare">Publish "Tax Scare" (risk)</button>
+
+        <div id="log"></div>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    <small>Prototype — real countries used for gameplay. Host on GitHub Pages.</small>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
