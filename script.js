@@ -1,216 +1,203 @@
-// Simple world-strategy prototype using D3 geo + GeoJSON
-// Fetch geoJSON and render an interactive map; highlight big powers for gameplay.
-
 const BIG_POWERS = [
-  "United States",
-  "China",
-  "Russia",
-  "India",
-  "United Kingdom",
-  "France",
-  "Germany",
-  "Japan",
-  "Brazil"
+  { name: "United States", aliases: ["United States", "United States of America"], x: 0.22, y: 0.42 },
+  { name: "China", aliases: ["China"], x: 0.77, y: 0.42 },
+  { name: "Russia", aliases: ["Russia", "Russian Federation"], x: 0.68, y: 0.23 },
+  { name: "India", aliases: ["India"], x: 0.70, y: 0.55 },
+  { name: "United Kingdom", aliases: ["United Kingdom"], x: 0.48, y: 0.28 },
+  { name: "France", aliases: ["France"], x: 0.49, y: 0.37 },
+  { name: "Germany", aliases: ["Germany"], x: 0.53, y: 0.32 },
+  { name: "Japan", aliases: ["Japan"], x: 0.87, y: 0.39 },
+  { name: "Brazil", aliases: ["Brazil"], x: 0.34, y: 0.68 }
 ];
 
-const WIDTH = 900, HEIGHT = 560;
-const svg = d3.select("#worldmap")
-  .attr("width", WIDTH).attr("height", HEIGHT);
+const state = Object.fromEntries(BIG_POWERS.map(({ name }) => [name, {
+  name,
+  taxes: 10,
+  happiness: 50 + Math.floor(Math.random() * 21),
+  economy: 60 + Math.floor(Math.random() * 31),
+  infra: 20 + Math.floor(Math.random() * 41),
+  influence: 20 + Math.floor(Math.random() * 41)
+}]));
 
-const projection = d3.geoMercator()
-  .scale(150).translate([WIDTH/2, HEIGHT/1.6]);
-const path = d3.geoPath().projection(projection);
+let selectedCountry = null;
+const svg = document.querySelector("#worldmap");
+const log = document.querySelector("#log");
 
-let state = {}; // countryName -> stats
-
-// Initialize playable countries with starting stats
-BIG_POWERS.forEach(name => {
-  state[name] = {
-    name,
-    taxes: 10,
-    happiness: Math.round(50 + Math.random()*20),
-    economy: Math.round(60 + Math.random()*30),
-    infra: Math.round(20 + Math.random()*40),
-    influence: Math.round(20 + Math.random()*40)
-  };
-});
-
-function updateLeaderboard(){
-  const list = Object.values(state).sort((a,b)=>b.influence-a.influence).slice(0,9);
-  const ul = d3.select("#leaders").selectAll("li").data(list, d=>d.name);
-  ul.join(
-    enter => enter.append("li").html(d => `<strong>${d.name}</strong><span>${d.influence}</span>`),
-    update => update.html(d => `<strong>${d.name}</strong><span>${d.influence}</span>`),
-    exit => exit.remove()
-  );
+function $(id) {
+  return document.getElementById(id);
 }
 
-function showCountryPanel(name){
-  const info = state[name];
-  if(!info) return;
-  d3.select("#empty").classed("hidden", true);
-  const panel = d3.select("#countryPanel").classed("hidden", false);
-  d3.select("#countryName").text(info.name);
-  d3.select("#happiness").text(info.happiness);
-  d3.select("#economy").text(info.economy);
-  d3.select("#infra").text(info.infra);
-  d3.select("#influence").text(info.influence);
-  d3.select("#taxSlider").property("value", info.taxes);
-  d3.select("#taxVal").text(info.taxes + "%");
-  d3.select("#log").html(`<div>Managing ${info.name}</div>`);
-  // Attach controls
-  d3.select("#taxSlider").on("input", function(){
-    info.taxes = +this.value;
-    d3.select("#taxVal").text(info.taxes + "%");
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function appendLog(message) {
+  if (!log) return;
+  const entry = document.createElement("div");
+  entry.textContent = `[Turn] ${message}`;
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
+
+function updateLeaderboard() {
+  const list = Object.values(state)
+    .sort((a, b) => b.influence - a.influence)
+    .slice(0, 9);
+  $("leaders").innerHTML = list
+    .map(country => `<li><strong>${country.name}</strong><span>${country.influence}</span></li>`)
+    .join("");
+}
+
+function refreshPanel() {
+  if (!selectedCountry) return;
+  $("countryName").textContent = selectedCountry.name;
+  $("happiness").textContent = selectedCountry.happiness;
+  $("economy").textContent = selectedCountry.economy;
+  $("infra").textContent = selectedCountry.infra;
+  $("influence").textContent = selectedCountry.influence;
+  $("taxSlider").value = selectedCountry.taxes;
+  $("taxVal").textContent = `${selectedCountry.taxes}%`;
+  updateLeaderboard();
+}
+
+function selectCountry(name) {
+  selectedCountry = state[name];
+  $("empty").classList.add("hidden");
+  $("countryPanel").classList.remove("hidden");
+  $("log").innerHTML = "";
+  refreshPanel();
+  appendLog(`Managing ${name}.`);
+}
+
+function createPowerMarker(power) {
+  const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  const x = power.x * 900;
+  const y = power.y * 560;
+
+  group.classList.add("power-marker");
+  group.dataset.country = power.name;
+  circle.setAttribute("cx", x);
+  circle.setAttribute("cy", y);
+  circle.setAttribute("r", 13);
+  circle.setAttribute("fill", "#ff7b00");
+  circle.setAttribute("stroke", "#ffe0b2");
+  circle.setAttribute("stroke-width", "2");
+  label.setAttribute("x", x);
+  label.setAttribute("y", y + 31);
+  label.setAttribute("text-anchor", "middle");
+  label.setAttribute("fill", "#f4f7fb");
+  label.setAttribute("font-size", "12");
+  label.textContent = power.name;
+  group.append(circle, label);
+  group.addEventListener("click", () => selectCountry(power.name));
+  svg.appendChild(group);
+}
+
+function drawFallbackMap() {
+  svg.innerHTML = "";
+  const ocean = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  ocean.setAttribute("width", "900");
+  ocean.setAttribute("height", "560");
+  ocean.setAttribute("fill", "#09263a");
+  svg.appendChild(ocean);
+
+  const title = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  title.setAttribute("x", "450");
+  title.setAttribute("y", "42");
+  title.setAttribute("text-anchor", "middle");
+  title.setAttribute("fill", "#9aa7c0");
+  title.setAttribute("font-size", "16");
+  title.textContent = "GLOBAL INFLUENCE MAP";
+  svg.appendChild(title);
+
+  BIG_POWERS.forEach(createPowerMarker);
+}
+
+function bindControls() {
+  $("taxSlider").addEventListener("input", event => {
+    if (!selectedCountry) return;
+    selectedCountry.taxes = Number(event.target.value);
+    $("taxVal").textContent = `${selectedCountry.taxes}%`;
   });
 
-  d3.select("#buildInfra").on("click", ()=>{
-    const cost = Math.max(5, Math.round(50 - info.economy/2));
-    if(info.economy < cost){
+  $("back").addEventListener("click", () => {
+    selectedCountry = null;
+    $("countryPanel").classList.add("hidden");
+    $("empty").classList.remove("hidden");
+  });
+
+  $("buildInfra").addEventListener("click", () => {
+    if (!selectedCountry) return;
+    const cost = Math.max(5, Math.round(50 - selectedCountry.economy / 2));
+    if (selectedCountry.economy < cost) {
       appendLog("Not enough economy to build infrastructure.");
       return;
     }
-    info.economy -= cost;
-    info.infra += 5;
-    info.influence += 4;
-    appendLog(`Built infra (-${cost} econ). Infra +5, Influence +4`);
-    refreshPanel(info);
+    selectedCountry.economy -= cost;
+    selectedCountry.infra += 5;
+    selectedCountry.influence += 4;
+    appendLog(`Built infrastructure (-${cost} economy).`);
+    refreshPanel();
   });
 
-  d3.select("#investInfluence").on("click", ()=>{
-    const cost = 20;
-    if(info.economy < cost){ appendLog("Can't afford influence investments."); return; }
-    info.economy -= cost;
-    info.influence += 10;
-    appendLog("Invested in influence: +10 influence.");
-    refreshPanel(info);
+  $("investInfluence").addEventListener("click", () => {
+    if (!selectedCountry) return;
+    if (selectedCountry.economy < 20) {
+      appendLog("You cannot afford an influence investment.");
+      return;
+    }
+    selectedCountry.economy -= 20;
+    selectedCountry.influence += 10;
+    appendLog("Influence investment succeeded (+10 influence).");
+    refreshPanel();
   });
 
-  d3.select("#viralAd").on("click", ()=>{
-    const cost = 8;
-    if(info.economy < cost){ appendLog("Can't afford a campaign."); return; }
-    info.economy -= cost;
+  $("viralAd").addEventListener("click", () => {
+    if (!selectedCountry) return;
+    if (selectedCountry.economy < 8) {
+      appendLog("You cannot afford a viral campaign.");
+      return;
+    }
+    selectedCountry.economy -= 8;
     const gain = Math.random() < 0.7 ? 6 : 1;
-    info.influence += gain;
-    info.happiness += gain>3?2:-2;
-    appendLog(`Viral campaign: +${gain} influence.`);
-    refreshPanel(info);
+    selectedCountry.influence += gain;
+    selectedCountry.happiness = clamp(selectedCountry.happiness + (gain > 3 ? 2 : -2), 0, 100);
+    appendLog(`Viral campaign gained ${gain} influence.`);
+    refreshPanel();
   });
 
-  d3.select("#taxScare").on("click", ()=>{
-    // risky clickbait: may boost short-term clicks but lowers happiness
-    const chance = Math.random();
-    if(chance < 0.5){
-      info.influence += 8;
-      info.happiness -= 10;
-      appendLog("Tax Scare went viral: Influence +8, Happiness -10.");
+  $("taxScare").addEventListener("click", () => {
+    if (!selectedCountry) return;
+    if (Math.random() < 0.5) {
+      selectedCountry.influence += 8;
+      selectedCountry.happiness = clamp(selectedCountry.happiness - 10, 0, 100);
+      appendLog("Tax Scare went viral (+8 influence, -10 happiness).");
     } else {
-      info.happiness -= 5;
-      appendLog("Backlash: Happiness -5, little gain.");
+      selectedCountry.happiness = clamp(selectedCountry.happiness - 5, 0, 100);
+      appendLog("Tax Scare caused backlash (-5 happiness).");
     }
-    refreshPanel(info);
+    refreshPanel();
   });
-}
 
-function refreshPanel(info){
-  d3.select("#happiness").text(info.happiness);
-  d3.select("#economy").text(info.economy);
-  d3.select("#infra").text(info.infra);
-  d3.select("#influence").text(info.influence);
-  updateLeaderboard();
-}
-
-function appendLog(msg){
-  const log = d3.select("#log");
-  log.append("div").text(`[Turn] ${msg}`);
-  log.node().scrollTop = log.node().scrollHeight;
-}
-
-// Back button
-d3.select("#back").on("click", ()=>{
-  d3.select("#countryPanel").classed("hidden", true);
-  d3.select("#empty").classed("hidden", false);
-});
-
-// Turn resolution: taxes affect economy/happiness, infrastructure small passive gains, random events
-d3.select("#endTurn").on("click", ()=>{
-  Object.values(state).forEach(s => {
-    // Taxes: higher taxes -> short term economy up, happiness down
-    const taxEffect = s.taxes - 10;
-    s.economy += Math.round(taxEffect * 0.5);
-    s.happiness -= Math.round(taxEffect * 0.4);
-    // Infrastructure yields economy over time
-    s.economy += Math.round(s.infra * 0.1);
-    // natural happiness recovery
-    s.happiness += Math.random() < 0.35 ? 1 : 0;
-    // clamp
-    s.happiness = Math.max(0, Math.min(100, s.happiness));
-    s.economy = Math.max(0, s.economy);
-    // small passive influence from infra+economy
-    s.influence += Math.round((s.infra/10) + (s.economy/100));
-    // random event
-    if(Math.random() < 0.08){
-      const ev = Math.random() < 0.5 ? -8 : +8;
-      s.influence = Math.max(0, s.influence + ev);
-      appendLog(`${s.name} event: influence ${ev>0?"+":""}${ev}`);
-    }
-  });
-  updateLeaderboard();
-  appendLog("Turn resolved.");
-  // Victory check
-  const winner = Object.values(state).find(s => s.influence >= 300);
-  if(winner){
-    alert(`${winner.name} achieved global dominance!`);
-  }
-  // refresh visible panel
-  const name = d3.select("#countryName").text();
-  if(name) refreshPanel(state[name]);
-});
-
-// Load geojson and render world map
-d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/data/world.geojson").then(geo => {
-  svg.append("g").selectAll("path")
-    .data(geo.features)
-    .join("path")
-    .attr("d", path)
-    .attr("class", d => {
-      const n = d.properties.name;
-      return BIG_POWERS.includes(n) ? "country playable" : "country";
-    })
-    .attr("fill", d => {
-      const n = d.properties.name;
-      if(BIG_POWERS.includes(n)){
-        // color by initial influence
-        const s = state[n];
-        const scale = Math.min(1, s.influence/120);
-        return d3.interpolateWarm(scale);
+  $("endTurn").addEventListener("click", () => {
+    Object.values(state).forEach(country => {
+      const taxEffect = country.taxes - 10;
+      country.economy = Math.max(0, country.economy + Math.round(taxEffect * 0.5) + Math.round(country.infra * 0.1));
+      country.happiness = clamp(country.happiness - Math.round(taxEffect * 0.4) + (Math.random() < 0.35 ? 1 : 0), 0, 100);
+      country.influence += Math.round(country.infra / 10 + country.economy / 100);
+      if (Math.random() < 0.08) {
+        const change = Math.random() < 0.5 ? -8 : 8;
+        country.influence = Math.max(0, country.influence + change);
       }
-      return "#0b2130";
-    })
-    .on("click", function(event, d){
-      const name = d.properties.name;
-      if(!BIG_POWERS.includes(name)){ appendLog("This country is not a major power (not playable)."); return; }
-      showCountryPanel(name);
-    })
-    .on("mouseover", function(event, d){ d3.select(this).attr("opacity",0.9); })
-    .on("mouseout", function(){ d3.select(this).attr("opacity",1); });
+    });
+    updateLeaderboard();
+    appendLog("Turn resolved. Taxes, happiness, and infrastructure updated.");
+    if (selectedCountry) refreshPanel();
+  });
+}
 
-  svg.append("g").selectAll("text")
-    .data(geo.features.filter(f => BIG_POWERS.includes(f.properties.name)))
-    .join("text")
-    .attr("transform", d => {
-      const c = path.centroid(d);
-      return `translate(${c[0]},${c[1]})`;
-    })
-    .text(d => {
-      const n = d.properties.name;
-      return n.split(" ")[0]; // short label
-    })
-    .attr("font-size", 11)
-    .attr("fill", "#041322")
-    .attr("text-anchor","middle")
-    .attr("dy",4)
-    .style("pointer-events","none");
-
-  updateLeaderboard();
-});
+bindControls();
+drawFallbackMap();
+updateLeaderboard();
