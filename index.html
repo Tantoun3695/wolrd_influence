@@ -57,23 +57,28 @@
           <p>Higher taxes fund your rise, but citizens may push back.</p>
           <label for="taxSlider">Tax rate <strong id="taxVal">10%</strong></label>
           <input id="taxSlider" type="range" min="0" max="50" value="10">
+          <button id="openParliament">Open parliament</button>
         </article>
         <article class="action-card infrastructure">
           <span class="action-icon">🏗</span><span class="eyebrow">INFRASTRUCTURE</span><h3>Build the future</h3>
           <p>Turn economic power into roads, technology and influence.</p>
-          <button id="buildInfra">Build infrastructure</button>
-          <button id="investInfluence" class="secondary">Invest in diplomacy</button>
+          <button id="openInfrastructure">Open project room</button>
         </article>
         <article class="action-card media">
           <span class="action-icon">📱</span><span class="eyebrow">MEDIA & CLICKS</span><h3>Own the conversation</h3>
           <p>Go viral for a boost, but every headline has consequences.</p>
-          <button id="viralAd">Launch viral campaign</button>
-          <button id="taxScare" class="secondary">Publish tax scare</button>
+          <button id="openMedia">Open media studio</button>
         </article>
       </div>
       <div id="log" class="log" aria-live="polite"></div>
     </section>
   </main>
+  <div id="decisionModal" class="modal hidden">
+    <div class="decision-room">
+      <button id="closeModal" class="close-button">×</button>
+      <div id="decisionContent"></div>
+    </div>
+  </div>
   <script src="script.js"></script>
 </body>
 </html>
