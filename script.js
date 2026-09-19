@@ -1,203 +1,25 @@
 const BIG_POWERS = [
-  { name: "United States", aliases: ["United States", "United States of America"], x: 0.22, y: 0.42 },
-  { name: "China", aliases: ["China"], x: 0.77, y: 0.42 },
-  { name: "Russia", aliases: ["Russia", "Russian Federation"], x: 0.68, y: 0.23 },
-  { name: "India", aliases: ["India"], x: 0.70, y: 0.55 },
-  { name: "United Kingdom", aliases: ["United Kingdom"], x: 0.48, y: 0.28 },
-  { name: "France", aliases: ["France"], x: 0.49, y: 0.37 },
-  { name: "Germany", aliases: ["Germany"], x: 0.53, y: 0.32 },
-  { name: "Japan", aliases: ["Japan"], x: 0.87, y: 0.39 },
-  { name: "Brazil", aliases: ["Brazil"], x: 0.34, y: 0.68 }
+  {name:"United States", short:"USA", x:.22,y:.42,tag:"Atlantic superpower"},
+  {name:"China", short:"CHN", x:.77,y:.42,tag:"Industrial giant"},
+  {name:"Russia", short:"RUS", x:.68,y:.23,tag:"Northern powerhouse"},
+  {name:"India", short:"IND", x:.70,y:.55,tag:"Rising economy"},
+  {name:"United Kingdom", short:"UK", x:.48,y:.28,tag:"Global network"},
+  {name:"France", short:"FRA", x:.49,y:.37,tag:"Diplomatic power"},
+  {name:"Germany", short:"GER", x:.53,y:.32,tag:"Economic engine"},
+  {name:"Japan", short:"JPN", x:.87,y:.39,tag:"Tech leader"},
+  {name:"Brazil", short:"BRA", x:.34,y:.68,tag:"Resource giant"}
 ];
-
-const state = Object.fromEntries(BIG_POWERS.map(({ name }) => [name, {
-  name,
-  taxes: 10,
-  happiness: 50 + Math.floor(Math.random() * 21),
-  economy: 60 + Math.floor(Math.random() * 31),
-  infra: 20 + Math.floor(Math.random() * 41),
-  influence: 20 + Math.floor(Math.random() * 41)
-}]));
-
-let selectedCountry = null;
-const svg = document.querySelector("#worldmap");
-const log = document.querySelector("#log");
-
-function $(id) {
-  return document.getElementById(id);
-}
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
-function appendLog(message) {
-  if (!log) return;
-  const entry = document.createElement("div");
-  entry.textContent = `[Turn] ${message}`;
-  log.appendChild(entry);
-  log.scrollTop = log.scrollHeight;
-}
-
-function updateLeaderboard() {
-  const list = Object.values(state)
-    .sort((a, b) => b.influence - a.influence)
-    .slice(0, 9);
-  $("leaders").innerHTML = list
-    .map(country => `<li><strong>${country.name}</strong><span>${country.influence}</span></li>`)
-    .join("");
-}
-
-function refreshPanel() {
-  if (!selectedCountry) return;
-  $("countryName").textContent = selectedCountry.name;
-  $("happiness").textContent = selectedCountry.happiness;
-  $("economy").textContent = selectedCountry.economy;
-  $("infra").textContent = selectedCountry.infra;
-  $("influence").textContent = selectedCountry.influence;
-  $("taxSlider").value = selectedCountry.taxes;
-  $("taxVal").textContent = `${selectedCountry.taxes}%`;
-  updateLeaderboard();
-}
-
-function selectCountry(name) {
-  selectedCountry = state[name];
-  $("empty").classList.add("hidden");
-  $("countryPanel").classList.remove("hidden");
-  $("log").innerHTML = "";
-  refreshPanel();
-  appendLog(`Managing ${name}.`);
-}
-
-function createPowerMarker(power) {
-  const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-  const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  const x = power.x * 900;
-  const y = power.y * 560;
-
-  group.classList.add("power-marker");
-  group.dataset.country = power.name;
-  circle.setAttribute("cx", x);
-  circle.setAttribute("cy", y);
-  circle.setAttribute("r", 13);
-  circle.setAttribute("fill", "#ff7b00");
-  circle.setAttribute("stroke", "#ffe0b2");
-  circle.setAttribute("stroke-width", "2");
-  label.setAttribute("x", x);
-  label.setAttribute("y", y + 31);
-  label.setAttribute("text-anchor", "middle");
-  label.setAttribute("fill", "#f4f7fb");
-  label.setAttribute("font-size", "12");
-  label.textContent = power.name;
-  group.append(circle, label);
-  group.addEventListener("click", () => selectCountry(power.name));
-  svg.appendChild(group);
-}
-
-function drawFallbackMap() {
-  svg.innerHTML = "";
-  const ocean = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  ocean.setAttribute("width", "900");
-  ocean.setAttribute("height", "560");
-  ocean.setAttribute("fill", "#09263a");
-  svg.appendChild(ocean);
-
-  const title = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  title.setAttribute("x", "450");
-  title.setAttribute("y", "42");
-  title.setAttribute("text-anchor", "middle");
-  title.setAttribute("fill", "#9aa7c0");
-  title.setAttribute("font-size", "16");
-  title.textContent = "GLOBAL INFLUENCE MAP";
-  svg.appendChild(title);
-
-  BIG_POWERS.forEach(createPowerMarker);
-}
-
-function bindControls() {
-  $("taxSlider").addEventListener("input", event => {
-    if (!selectedCountry) return;
-    selectedCountry.taxes = Number(event.target.value);
-    $("taxVal").textContent = `${selectedCountry.taxes}%`;
-  });
-
-  $("back").addEventListener("click", () => {
-    selectedCountry = null;
-    $("countryPanel").classList.add("hidden");
-    $("empty").classList.remove("hidden");
-  });
-
-  $("buildInfra").addEventListener("click", () => {
-    if (!selectedCountry) return;
-    const cost = Math.max(5, Math.round(50 - selectedCountry.economy / 2));
-    if (selectedCountry.economy < cost) {
-      appendLog("Not enough economy to build infrastructure.");
-      return;
-    }
-    selectedCountry.economy -= cost;
-    selectedCountry.infra += 5;
-    selectedCountry.influence += 4;
-    appendLog(`Built infrastructure (-${cost} economy).`);
-    refreshPanel();
-  });
-
-  $("investInfluence").addEventListener("click", () => {
-    if (!selectedCountry) return;
-    if (selectedCountry.economy < 20) {
-      appendLog("You cannot afford an influence investment.");
-      return;
-    }
-    selectedCountry.economy -= 20;
-    selectedCountry.influence += 10;
-    appendLog("Influence investment succeeded (+10 influence).");
-    refreshPanel();
-  });
-
-  $("viralAd").addEventListener("click", () => {
-    if (!selectedCountry) return;
-    if (selectedCountry.economy < 8) {
-      appendLog("You cannot afford a viral campaign.");
-      return;
-    }
-    selectedCountry.economy -= 8;
-    const gain = Math.random() < 0.7 ? 6 : 1;
-    selectedCountry.influence += gain;
-    selectedCountry.happiness = clamp(selectedCountry.happiness + (gain > 3 ? 2 : -2), 0, 100);
-    appendLog(`Viral campaign gained ${gain} influence.`);
-    refreshPanel();
-  });
-
-  $("taxScare").addEventListener("click", () => {
-    if (!selectedCountry) return;
-    if (Math.random() < 0.5) {
-      selectedCountry.influence += 8;
-      selectedCountry.happiness = clamp(selectedCountry.happiness - 10, 0, 100);
-      appendLog("Tax Scare went viral (+8 influence, -10 happiness).");
-    } else {
-      selectedCountry.happiness = clamp(selectedCountry.happiness - 5, 0, 100);
-      appendLog("Tax Scare caused backlash (-5 happiness).");
-    }
-    refreshPanel();
-  });
-
-  $("endTurn").addEventListener("click", () => {
-    Object.values(state).forEach(country => {
-      const taxEffect = country.taxes - 10;
-      country.economy = Math.max(0, country.economy + Math.round(taxEffect * 0.5) + Math.round(country.infra * 0.1));
-      country.happiness = clamp(country.happiness - Math.round(taxEffect * 0.4) + (Math.random() < 0.35 ? 1 : 0), 0, 100);
-      country.influence += Math.round(country.infra / 10 + country.economy / 100);
-      if (Math.random() < 0.08) {
-        const change = Math.random() < 0.5 ? -8 : 8;
-        country.influence = Math.max(0, country.influence + change);
-      }
-    });
-    updateLeaderboard();
-    appendLog("Turn resolved. Taxes, happiness, and infrastructure updated.");
-    if (selectedCountry) refreshPanel();
-  });
-}
-
-bindControls();
-drawFallbackMap();
-updateLeaderboard();
+const state=Object.fromEntries(BIG_POWERS.map(({name})=>[name,{name,taxes:10,happiness:50+Math.floor(Math.random()*21),economy:60+Math.floor(Math.random()*31),infra:20+Math.floor(Math.random()*41),influence:20+Math.floor(Math.random()*41)}]));
+let player=null,turn=1;
+const $=id=>document.getElementById(id), svg=$("worldmap"), log=$("log");
+const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+function appendLog(message){const el=document.createElement("div");el.textContent=`Turn ${turn}: ${message}`;log.appendChild(el);log.scrollTop=log.scrollHeight}
+function updateLeaderboard(){const list=Object.values(state).sort((a,b)=>b.influence-a.influence);$("leaders").innerHTML=list.map(c=>`<li class="${player&&c.name===player.name?"player":""}"><strong>${c.name}</strong><span>${c.influence} INF</span></li>`).join("")}
+function refreshPanel(){$("countryName").textContent=player.name;$("happiness").textContent=player.happiness;$("economy").textContent=player.economy;$("infra").textContent=player.infra;$("influence").textContent=player.influence;$("taxSlider").value=player.taxes;$("taxVal").textContent=`${player.taxes}%`;updateLeaderboard();updateMarkers()}
+function chooseCountry(name){player=state[name];$("countryPicker").classList.add("hidden");$("countryPanel").classList.remove("hidden");$("playerBadge").textContent=`PLAYING AS ${name.toUpperCase()}`;refreshPanel();appendLog(`You chose ${name}. Reach 300 influence to win.`)}
+function marker(power){const g=document.createElementNS("http://www.w3.org/2000/svg","g"),c=document.createElementNS("http://www.w3.org/2000/svg","circle"),t=document.createElementNS("http://www.w3.org/2000/svg","text");const x=power.x*900,y=power.y*560;g.classList.add("power-marker");g.dataset.country=power.name;c.setAttribute("cx",x);c.setAttribute("cy",y);c.setAttribute("r",13);t.setAttribute("x",x);t.setAttribute("y",y+31);t.setAttribute("text-anchor","middle");t.textContent=power.short;g.append(c,t);g.addEventListener("click",()=>{if(!player)chooseCountry(power.name);else appendLog(`${power.name} is currently at ${state[power.name].influence} influence.`)});svg.appendChild(g)}
+function drawMap(){svg.innerHTML="";const continents=[["M70 205 Q170 120 315 190 L360 310 Q280 350 190 315 L90 335Z"],["M390 155 Q465 90 555 155 L535 275 Q475 310 420 255Z"],["M550 150 Q700 90 835 170 L850 300 Q740 335 610 290 L545 230Z"],["M260 350 Q340 320 410 385 L385 510 Q310 530 250 440Z"],["M610 340 Q720 315 830 380 L805 500 Q685 510 615 440Z"]];continents.forEach(d=>{const p=document.createElementNS("http://www.w3.org/2000/svg","path");p.setAttribute("d",d[0]);p.classList.add("continent");svg.appendChild(p)});const title=document.createElementNS("http://www.w3.org/2000/svg","text");title.setAttribute("x",450);title.setAttribute("y",48);title.setAttribute("text-anchor","middle");title.setAttribute("fill","#b3c5d9");title.setAttribute("font-size","16");title.textContent="GLOBAL INFLUENCE MAP";svg.appendChild(title);BIG_POWERS.forEach(marker);updateMarkers()}
+function updateMarkers(){document.querySelectorAll(".power-marker").forEach(g=>{const c=state[g.dataset.country],circle=g.querySelector("circle");g.classList.toggle("player",!!player&&g.dataset.country===player.name);circle.style.opacity=.45+Math.min(.55,c.influence/300);circle.setAttribute("r",10+Math.min(7,c.influence/60))})}
+function bind(){document.querySelectorAll(".country-choice").forEach(b=>b.addEventListener("click",()=>chooseCountry(b.dataset.country)));$("taxSlider").addEventListener("input",e=>{player.taxes=+e.target.value;$("taxVal").textContent=`${player.taxes}%`});$("buildInfra").addEventListener("click",()=>{const cost=Math.max(5,Math.round(50-player.economy/2));if(player.economy<cost)return appendLog("Not enough economy to build infrastructure.");player.economy-=cost;player.infra+=5;player.influence+=4;appendLog(`Infrastructure expanded (-${cost} economy).`);refreshPanel()});$("investInfluence").addEventListener("click",()=>{if(player.economy<20)return appendLog("You cannot afford diplomacy.");player.economy-=20;player.influence+=10;appendLog("Diplomatic investment succeeded (+10 influence).");refreshPanel()});$("viralAd").addEventListener("click",()=>{if(player.economy<8)return appendLog("You cannot afford a viral campaign.");player.economy-=8;const gain=Math.random()<.7?6:1;player.influence+=gain;player.happiness=clamp(player.happiness+(gain>3?2:-2),0,100);appendLog(`Viral campaign gained ${gain} influence.`);refreshPanel()});$("taxScare").addEventListener("click",()=>{if(Math.random()<.5){player.influence+=8;player.happiness=clamp(player.happiness-10,0,100);appendLog("Tax Scare went viral (+8 influence).")}else{player.happiness=clamp(player.happiness-5,0,100);appendLog("Tax Scare caused backlash (-5 happiness).")}refreshPanel()});$("endTurn").addEventListener("click",()=>{turn++;Object.values(state).forEach(c=>{if(c!==player){c.influence=Math.max(0,c.influence+Math.floor(Math.random()*5)-1)}const tax=c.taxes-10;c.economy=Math.max(0,c.economy+Math.round(tax*.5)+Math.round(c.infra*.1));c.happiness=clamp(c.happiness-Math.round(tax*.4)+(Math.random()<.35?1:0),0,100);c.influence+=Math.round(c.infra/10+c.economy/100)});$("turn").textContent=turn;appendLog("Turn resolved. Every power is making its move.");refreshPanel();if(player.influence>=300)appendLog("You reached global dominance! You win.")})}
+function init(){ $("countryChoices").innerHTML=BIG_POWERS.map(c=>`<button class="country-choice" data-country="${c.name}"><strong>${c.short} · ${c.name}</strong><small>${c.tag}</small></button>`).join("");bind();drawMap();updateLeaderboard()}
+init();

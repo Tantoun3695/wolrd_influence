@@ -1,71 +1,79 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>War & Clickbait Strategy</title>
-  <link rel="stylesheet" href="styles.css" />
-  <!-- D3 + topo/geo helpers -->
-  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>World Influence</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header>
-    <h1>War & Clickbait Strategy</h1>
-    <p>Lead a real-world power. Use taxes, infrastructure, and viral clicks to gain global influence.</p>
+  <div id="countryPicker" class="picker">
+    <div class="picker-card">
+      <span class="eyebrow">WORLD INFLUENCE</span>
+      <h1>Build the world's most powerful country.</h1>
+      <p>Choose a major power. Balance happy citizens, a strong economy and attention-grabbing media to reach global dominance.</p>
+      <div id="countryChoices" class="country-choices"></div>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <div>
+      <span class="eyebrow">WORLD INFLUENCE</span>
+      <h1>Lead. Build. Go viral.</h1>
+    </div>
+    <div class="turn-box">TURN <strong id="turn">1</strong><button id="endTurn">End turn →</button></div>
   </header>
 
-  <main>
-    <div id="map-area">
-      <svg id="worldmap" width="900" height="560"></svg>
-      <div id="hud">
-        <div id="scoreboard">
-          <h3>Influence Leaderboard</h3>
-          <ul id="leaders"></ul>
-        </div>
-        <div id="controls">
-          <button id="endTurn">End Turn</button>
-          <div class="hint">Tip: Click a colored country to manage it.</div>
-        </div>
+  <main class="layout">
+    <section class="map-card">
+      <div class="section-heading">
+        <div><span class="eyebrow">GLOBAL POWER GRID</span><h2>Influence map</h2></div>
+        <span id="playerBadge" class="player-badge"></span>
       </div>
-    </div>
+      <svg id="worldmap" viewBox="0 0 900 560" role="img" aria-label="World map"></svg>
+      <p class="map-tip">Brighter capitals have more influence. Your country is outlined in gold.</p>
+    </section>
 
-    <aside id="panel">
-      <div id="empty">
-        <h2>Select a leading country</h2>
-        <p>Highlighted countries are playable big powers.</p>
-      </div>
-
-      <div id="countryPanel" class="hidden">
-        <button id="back">← Back</button>
-        <h2 id="countryName"></h2>
-        <div class="stat-row"><label>Happiness:</label><span id="happiness"></span></div>
-        <div class="stat-row"><label>Economy:</label><span id="economy"></span></div>
-        <div class="stat-row"><label>Infrastructure:</label><span id="infra"></span></div>
-        <div class="stat-row"><label>Influence:</label><span id="influence"></span></div>
-
-        <hr/>
-        <label>Taxes: <span id="taxVal">10%</span></label>
-        <input id="taxSlider" type="range" min="0" max="50" step="1" value="10">
-
-        <div class="actions">
-          <button id="buildInfra">Build Infrastructure (Cost)</button>
-          <button id="investInfluence">Invest in Influence</button>
-        </div>
-
-        <hr/>
-        <h3>Clickbait Options</h3>
-        <button id="viralAd">Start Viral Campaign (low cost)</button>
-        <button id="taxScare">Publish "Tax Scare" (risk)</button>
-
-        <div id="log"></div>
-      </div>
+    <aside class="leaderboard-card">
+      <div class="section-heading"><div><span class="eyebrow">THE RACE</span><h2>World leaderboard</h2></div><span class="live-dot">LIVE</span></div>
+      <ol id="leaders"></ol>
+      <div class="win-condition"><strong>Victory goal</strong><span>Reach 300 influence before anyone else.</span></div>
     </aside>
+
+    <section id="countryPanel" class="dashboard hidden">
+      <div class="country-header">
+        <div><span class="eyebrow">YOUR NATION</span><h2 id="countryName"></h2><p>Make choices that shape your rise to global dominance.</p></div>
+        <div class="stats">
+          <div><span>Happiness</span><strong id="happiness"></strong></div>
+          <div><span>Economy</span><strong id="economy"></strong></div>
+          <div><span>Infrastructure</span><strong id="infra"></strong></div>
+          <div><span>Influence</span><strong id="influence"></strong></div>
+        </div>
+      </div>
+
+      <div class="action-grid">
+        <article class="action-card government">
+          <span class="action-icon">🏛</span><span class="eyebrow">GOVERNMENT</span><h3>Set the tax mood</h3>
+          <p>Higher taxes fund your rise, but citizens may push back.</p>
+          <label for="taxSlider">Tax rate <strong id="taxVal">10%</strong></label>
+          <input id="taxSlider" type="range" min="0" max="50" value="10">
+        </article>
+        <article class="action-card infrastructure">
+          <span class="action-icon">🏗</span><span class="eyebrow">INFRASTRUCTURE</span><h3>Build the future</h3>
+          <p>Turn economic power into roads, technology and influence.</p>
+          <button id="buildInfra">Build infrastructure</button>
+          <button id="investInfluence" class="secondary">Invest in diplomacy</button>
+        </article>
+        <article class="action-card media">
+          <span class="action-icon">📱</span><span class="eyebrow">MEDIA & CLICKS</span><h3>Own the conversation</h3>
+          <p>Go viral for a boost, but every headline has consequences.</p>
+          <button id="viralAd">Launch viral campaign</button>
+          <button id="taxScare" class="secondary">Publish tax scare</button>
+        </article>
+      </div>
+      <div id="log" class="log" aria-live="polite"></div>
+    </section>
   </main>
-
-  <footer>
-    <small>Prototype — real countries used for gameplay. Host on GitHub Pages.</small>
-  </footer>
-
   <script src="script.js"></script>
 </body>
 </html>
