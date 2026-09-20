@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>World Influence</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="countryPicker" class="picker">
+    <div class="picker-card">
+      <span class="eyebrow">WORLD INFLUENCE</span>
+      <h1>Build the world's most powerful country.</h1>
+      <p>Choose a major power. Balance happy citizens, a strong economy and attention-grabbing media to reach global dominance.</p>
+      <div id="countryChoices" class="country-choices"></div>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <div>
+      <span class="eyebrow">WORLD INFLUENCE</span>
+      <h1>Lead. Build. Go viral.</h1>
+    </div>
+    <div class="turn-box">TURN <strong id="turn">1</strong><button id="endTurn">End turn →</button></div>
+  </header>
+
+  <main class="layout">
+    <section class="map-card">
+      <div class="section-heading">
+        <div><span class="eyebrow">GLOBAL POWER GRID</span><h2>Influence map</h2></div>
+        <span id="playerBadge" class="player-badge"></span>
+      </div>
+      <svg id="worldmap" viewBox="0 0 900 560" role="img" aria-label="World map"></svg>
+      <p class="map-tip">Brighter capitals have more influence. Your country is outlined in gold.</p>
+    </section>
+
+    <aside class="leaderboard-card">
+      <div class="section-heading"><div><span class="eyebrow">THE RACE</span><h2>World leaderboard</h2></div><span class="live-dot">LIVE</span></div>
+      <ol id="leaders"></ol>
+      <div class="win-condition"><strong>Victory goal</strong><span>Reach 300 influence before anyone else.</span></div>
+    </aside>
+
+    <section id="countryPanel" class="dashboard hidden">
+      <div class="country-header">
+        <div><span class="eyebrow">YOUR NATION</span><h2 id="countryName"></h2><p>Make choices that shape your rise to global dominance.</p></div>
+        <div class="stats">
+          <div><span>😊 Happiness</span><strong id="happiness"></strong></div>
+          <div><span>💰 Economy</span><strong id="economy"></strong></div>
+          <div><span>🏗️ Infrastructure</span><strong id="infra"></strong></div>
+          <div><span>🌐 Influence</span><strong id="influence"></strong></div>
+          <div><span>🕶️ Corruption</span><strong id="corruption"></strong></div>
+        </div>
+      </div>
+
+      <div class="action-grid">
+        <article class="action-card government">
+          <span class="action-icon">🏛</span><span class="eyebrow">GOVERNMENT</span><h3>Set the tax mood</h3>
+          <p>Higher taxes fund your rise, but citizens may push back.</p>
+          <label for="taxSlider">Tax rate <strong id="taxVal">10%</strong></label>
+          <input id="taxSlider" type="range" min="0" max="50" value="10">
+          <button id="openParliament">Open parliament</button>
+        </article>
+        <article class="action-card infrastructure">
+          <span class="action-icon">🏗</span><span class="eyebrow">INFRASTRUCTURE</span><h3>Build the future</h3>
+          <p>Turn economic power into roads, technology and influence.</p>
+          <button id="openInfrastructure">Open project room</button>
+        </article>
+        <article class="action-card media">
+          <span class="action-icon">📱</span><span class="eyebrow">MEDIA & CLICKS</span><h3>Own the conversation</h3>
+          <p>Go viral for a boost, but every headline has consequences.</p>
+          <button id="openMedia">Open media studio</button>
+        </article>
+        <article class="action-card corruption">
+          <span class="action-icon">🕶️</span><span class="eyebrow">COVERT OPS</span><h3>Play the dirty game</h3>
+          <p>Steal resources or buy foreign support. Failure can expose your operation.</p>
+          <button id="openCorruption">Open covert operations</button>
+        </article>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-panel"><span class="eyebrow">WORLD PULSE</span><h3 id="trendTitle">Trending topic</h3><p id="trendText"></p><strong id="eventText"></strong></article>
+        <article class="feature-panel"><span class="eyebrow">DIPLOMACY</span><h3>Build your coalition</h3><p id="blocText">No bloc yet. Alliances protect your reputation.</p><button id="openDiplomacy">Open diplomacy</button></article>
+        <article class="feature-panel"><span class="eyebrow">PUBLIC LIFE</span><h3>Reputation & elections</h3><p id="publicText"></p><div class="feature-buttons"><button id="openSocial">Social command</button><button id="openInvestigation">Investigate</button></div></article>
+      </div>
+      <div class="objective-strip"><span>🔐 Secret objective: <strong id="objectiveText"></strong></span><span>🏟️ Global event: <strong id="globalEventText"></strong></span></div>
+      <div id="log" class="log" aria-live="polite"></div>
+    </section>
+  </main>
+  <div id="decisionModal" class="modal hidden">
+    <div class="decision-room">
+      <button id="closeModal" class="close-button">×</button>
+      <div id="decisionContent"></div>
+    </div>
+  </div>
+  <style>
+    .action-card.corruption{background:linear-gradient(145deg,#171717,#5b123f 55%,#1b0b38);border-color:#ff4f9a}.target-label{display:block;margin:20px 0 12px;color:#eadcf2;font-weight:800}.target-label select{display:block;width:100%;margin-top:8px;padding:11px;border-radius:10px;border:1px solid #a85dba;background:#21133e;color:#fff;font:inherit}
+    .winner-screen{text-align:center;padding:25px}.winner-screen h2{font-size:38px;margin:8px 0;color:#ffe66d}.winner-screen p{color:#eadcf2;line-height:1.5}.winner-score{display:block;color:#52f2c2;font-size:24px;margin:20px}.winner-screen button{margin-top:8px}
+  </style>
+  <script src="script.js"></script>
+</body>
+</html>
